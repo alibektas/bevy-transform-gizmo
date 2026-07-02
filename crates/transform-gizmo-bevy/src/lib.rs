@@ -595,12 +595,15 @@ fn draw_gizmos(
 
         let mut bevy_draw_data = render::GizmoDrawData::default();
 
-        let (asset, is_new_asset) = if let Some(handle) = draw_data_handles.handles.get(gizmo_uuid)
-        {
-            (draw_data_assets.get_mut(handle).unwrap(), false)
-        } else {
-            (&mut bevy_draw_data, true)
-        };
+        let (asset, is_new_asset): (&mut render::GizmoDrawData, bool) =
+            if let Some(handle) = draw_data_handles.handles.get(gizmo_uuid) {
+                (
+                    draw_data_assets.get_mut(handle).unwrap().into_inner(),
+                    false,
+                )
+            } else {
+                (&mut bevy_draw_data, true)
+            };
 
         let viewport = &gizmo.config().viewport;
 
