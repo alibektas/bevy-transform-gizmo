@@ -11,7 +11,7 @@ use bevy_ecs::query::ROQueryItem;
 use bevy_ecs::system::SystemParamItem;
 use bevy_ecs::system::lifetimeless::{Read, SRes};
 use bevy_mesh::{PrimitiveTopology, VertexBufferLayout};
-use bevy_pbr::{MeshPipeline, MeshPipelineKey, SetMeshViewBindGroup};
+use bevy_pbr::{MeshPipeline, MeshPipelineKey, MeshPipelineSystems, SetMeshViewBindGroup};
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_reflect::{Reflect, TypePath};
 use bevy_render::extract_component::ExtractComponent;
@@ -33,7 +33,7 @@ use bevy_render::render_resource::{
 use bevy_render::renderer::RenderDevice;
 use bevy_render::sync_world::TemporaryRenderEntity;
 use bevy_render::view::ExtractedView;
-use bevy_render::{Extract, Render, RenderApp, RenderSystems};
+use bevy_render::{Extract, Render, RenderApp, RenderStartup, RenderSystems};
 use bevy_shader::Shader;
 use bytemuck::cast_slice;
 use uuid::Uuid;
@@ -74,7 +74,10 @@ impl Plugin for TransformGizmoRenderPlugin {
 
         render_app
             .add_systems(ExtractSchedule, extract_gizmo_data)
-            .init_resource::<TransformGizmoPipeline>();
+            .add_systems(
+                RenderStartup,
+                init_transform_gizmo_pipeline.after(MeshPipelineSystems),
+            );
     }
 }
 
@@ -220,12 +223,10 @@ struct TransformGizmoPipeline {
     mesh_pipeline: MeshPipeline,
 }
 
-impl FromWorld for TransformGizmoPipeline {
-    fn from_world(render_world: &mut World) -> Self {
-        Self {
-            mesh_pipeline: render_world.resource::<MeshPipeline>().clone(),
-        }
-    }
+fn init_transform_gizmo_pipeline(mut commands: Commands, mesh_pipeline: Res<MeshPipeline>) {
+    commands.insert_resource(TransformGizmoPipeline {
+        mesh_pipeline: mesh_pipeline.clone(),
+    });
 }
 
 #[derive(PartialEq, Eq, Hash, Clone)]
