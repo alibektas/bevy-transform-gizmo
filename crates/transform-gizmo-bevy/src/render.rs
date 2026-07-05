@@ -11,7 +11,9 @@ use bevy_ecs::query::ROQueryItem;
 use bevy_ecs::system::SystemParamItem;
 use bevy_ecs::system::lifetimeless::{Read, SRes};
 use bevy_mesh::{PrimitiveTopology, VertexBufferLayout};
-use bevy_pbr::{MeshPipeline, MeshPipelineKey, MeshPipelineSystems, SetMeshViewBindGroup};
+use bevy_pbr::{
+    MeshPipeline, MeshPipelineKey, MeshPipelineSystems, SetMeshViewBindGroup, ViewKeyCache,
+};
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_reflect::{Reflect, TypePath};
 use bevy_render::extract_component::ExtractComponent;
@@ -342,6 +344,7 @@ fn queue_transform_gizmos(
         ),
     )>,
     mut transparent_render_phases: ResMut<ViewSortedRenderPhases<Transparent3d>>,
+    view_key_cache: Res<ViewKeyCache>,
 ) {
     let draw_function = draw_functions.read().get_id::<DrawGizmo>().unwrap();
     let camera_msaa = msaa_q.single().ok().flatten();
@@ -381,6 +384,15 @@ fn queue_transform_gizmos(
 
         if deferred_prepass {
             view_key |= MeshPipelineKey::DEFERRED_PREPASS;
+        }
+
+        // The mesh view bind group's layout varies with tonemapping/dither, since
+        // `bevy_pbr` conditionally binds extra tonemapping resources into it. Reuse
+        // the key `bevy_pbr` already computed for this view so our layout lookup
+        // below matches the bind group `SetMeshViewBindGroup` actually sets.
+        if let Some(&pbr_view_key) = view_key_cache.get(&view.retained_view_entity) {
+            view_key |= pbr_view_key
+                & (MeshPipelineKey::TONEMAP_IN_SHADER | MeshPipelineKey::DEBAND_DITHER);
         }
 
         for (entity, handle) in &transform_gizmos {

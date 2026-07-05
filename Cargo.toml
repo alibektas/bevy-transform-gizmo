@@ -24,7 +24,7 @@ ecolor = "0.35"
 glam = { version = "0.32", features = ["mint"] }
 mint = "0.5"
 enum_dispatch = "0.3"
-ahash = "0.8"
+ahash = { version = "0.8", default-features = false, features = ["std", "no-rng"] }
 enumset = "1.1"
 bytemuck = "1.23"
 uuid = "1.17"
