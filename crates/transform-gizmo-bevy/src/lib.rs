@@ -34,11 +34,14 @@ use bevy_camera::Camera;
 use bevy_ecs::prelude::*;
 use bevy_input::prelude::*;
 use bevy_math::{DQuat, DVec3, Vec2};
+#[cfg(feature = "gizmo_picking_backend")]
 use bevy_picking::hover::HoverMap;
 use bevy_platform::collections::HashMap;
 use bevy_transform::prelude::*;
 use bevy_window::{PrimaryWindow, Window};
+#[cfg(feature = "mouse_interaction")]
 use mouse_interact::MouseGizmoInteractionPlugin;
+#[cfg(feature = "gizmo_picking_backend")]
 use picking::TransformGizmoPickingPlugin;
 use uuid::Uuid;
 
@@ -53,7 +56,9 @@ pub use transform_gizmo::{
     *,
 };
 
+#[cfg(feature = "mouse_interaction")]
 pub mod mouse_interact;
+#[cfg(feature = "gizmo_picking_backend")]
 pub mod picking;
 pub mod prelude;
 
